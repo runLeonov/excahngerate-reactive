@@ -1,7 +1,6 @@
 CREATE TABLE currency_rate
 (
-    id            INT PRIMARY KEY AUTO_INCREMENT,
-    currency_code VARCHAR(3) ,
+    currency_code VARCHAR(3)  PRIMARY KEY,
     exchange_rate DECIMAL,
     update_time   TIMESTAMP
 );

@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class Currency {
     @Id
+    private Integer id;
     private String currencyCode;
     private BigDecimal exchangeRate;
     private LocalDateTime updateTime;

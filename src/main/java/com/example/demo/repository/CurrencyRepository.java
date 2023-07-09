@@ -1,45 +1,17 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.Currency;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.query.Query;
-import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
+import org.springframework.data.r2dbc.repository.Modifying;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+public interface CurrencyRepository extends ReactiveCrudRepository<Currency, String> {
+    Mono<Currency> findByCurrencyCode(String currencyCode);
 
-@Repository
-public class CurrencyRepository {
-    private final R2dbcEntityTemplate entityTemplate;
-
-    public CurrencyRepository(R2dbcEntityTemplate entityTemplate) {
-        this.entityTemplate = entityTemplate;
-    }
-
-    public Mono<Currency> findByCode(String currencyCode) {
-        return entityTemplate.selectOne(Query.query(Criteria.where("currency_code").is(currencyCode)), Currency.class);
-    }
-
-    public Flux<Currency> findAll() {
-        return entityTemplate.select(Query.empty(), Currency.class);
-    }
-
-    public Mono<Currency> insertOrUpdate(Currency currency) {
-        String currencyCode = currency.getCurrencyCode();
-        LocalDateTime updateTime = currency.getUpdateTime();
-
-        return entityTemplate.selectOne(Query.query(Criteria.where("currency_code").is(currencyCode)), Currency.class)
-                .flatMap(existingCurrency -> {
-                    LocalDateTime existingUpdateTime = existingCurrency.getUpdateTime();
-                    if (existingUpdateTime.isEqual(updateTime)) {
-                        return Mono.just(existingCurrency);
-                    } else {
-                        existingCurrency.setUpdateTime(updateTime);
-                        return entityTemplate.update(existingCurrency).thenReturn(existingCurrency);
-                    }
-                })
-                .switchIfEmpty(entityTemplate.insert(currency));
-    }
+    @Modifying
+    @Transactional
+    @Query(value = "TRUNCATE TABLE my_entity")
+    void truncateTable();
 }

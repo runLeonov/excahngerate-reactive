@@ -1,4 +1,4 @@
-#To run this app you have to have
+# To run this app you have to have
 
 1. MySQL server with database "cash"
 2. Create table in cash db using this script: (script also located in src/main/resources/sql.sql)
@@ -15,11 +15,11 @@
 4. Run DemoApplication.java (located in src/main/java/DemoApplication.java)
 
 
-#To check program works:
+# To check program works:
 1. Check 1 currency http://localhost:8080/currencies/{currency_code} (exampe: http://localhost:8080/currencies/UAH)
 2. Check all currency http://localhost:8080/currencies
 
-##I used these scripts to check in browser:
+## I used these scripts to check in browser:
 await (
 await fetch(
 '/currencies',

@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 
 @RestController
-@RequestMapping("/currency")
+@RequestMapping("/currencies")
 @AllArgsConstructor
 public class CurrencyController {
     private final CurrencyService service;

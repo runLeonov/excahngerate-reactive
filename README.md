@@ -9,10 +9,10 @@
    update_time   TIMESTAMP
    );
 3. In application.properties (located in src/main/resources/application.properties) change properties
-   spring.r2dbc.url=r2dbc:mysql://localhost:3306/{YOUR_DB}
-   spring.r2dbc.username={YOUR_USER}
-   spring.r2dbc.password={YOUR_PASSWORD}
-4. Run DemoApplication.java (located in src/main/java/DemoApplication.java)
+   spring.r2dbc.url=r2dbc:mysql://localhost:3306/{YOUR_DB} <br>
+   spring.r2dbc.username={YOUR_USER} <br>
+   spring.r2dbc.password={YOUR_PASSWORD} <br>
+4. Run DemoApplication.java (located in src/main/java/DemoApplication.java) 
 
 
 # To check program works:

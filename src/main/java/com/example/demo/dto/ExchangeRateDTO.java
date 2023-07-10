@@ -3,12 +3,14 @@ package com.example.demo.dto;
 import com.example.demo.entity.Currency;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
+@NoArgsConstructor
 public class ExchangeRateDTO {
     @JsonProperty("base_code")
     private String baseCurrency;

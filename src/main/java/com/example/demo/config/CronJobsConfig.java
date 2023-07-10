@@ -32,7 +32,6 @@ public class CronJobsConfig {
                 .bodyToMono(ExchangeRateDTO.class)
                 .subscribeOn(Schedulers.boundedElastic());
         service.convertToCurrencyRateFlux(exchangeRateDto).flatMap(service::reinsert).subscribe();
-//        service.reinsert(service.convertToCurrencyRateFlux(exchangeRateDto)).subscribe();
         log.info("Got it:)");
     }
 }

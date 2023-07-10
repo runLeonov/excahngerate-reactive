@@ -22,5 +22,8 @@ public class Currency {
     private BigDecimal exchangeRate;
     private LocalDateTime updateTime;
 
-
+    public Currency(String currencyCode, BigDecimal exchangeRate) {
+        this.currencyCode = currencyCode;
+        this.exchangeRate = exchangeRate;
+    }
 }

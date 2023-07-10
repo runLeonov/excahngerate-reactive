@@ -20,6 +20,7 @@ import java.util.Locale;
 public class CurrencyService {
     private final WebClient webClient;
     private final CurrencyRepository repository;
+
     @Autowired
     public CurrencyService(WebClient webClient, CurrencyRepository currencyRateRepo) {
         this.webClient = webClient;
@@ -35,13 +36,21 @@ public class CurrencyService {
         return repository.findAll();
     }
 
-    private Mono<Currency> updateCurrencyRate(String currencyCode) {
+    public Mono<Currency> updateCurrencyRate(String currencyCode) {
         log.info("Reaching API to get ExchangeRate for " + currencyCode);
-        Mono<ExchangeRateDTO> exchangeRateDto = webClient.get()
+        return fetchExchangeRate(currencyCode)
+                .flatMap(exchangeRateDto -> convertToCurrencyRate(exchangeRateDto, currencyCode));
+    }
+
+    private Mono<ExchangeRateDTO> fetchExchangeRate(String currencyCode) {
+        return webClient.get()
                 .uri("/latest/USD")
                 .retrieve()
                 .bodyToMono(ExchangeRateDTO.class);
-        return convertToCurrencyRateFlux(exchangeRateDto)
+    }
+
+    private Mono<Currency> convertToCurrencyRate(ExchangeRateDTO exchangeRateDto, String currencyCode) {
+        return convertToCurrencyRateFlux(Mono.just(exchangeRateDto))
                 .filter(x -> x.getCurrencyCode().equals(currencyCode))
                 .singleOrEmpty();
     }

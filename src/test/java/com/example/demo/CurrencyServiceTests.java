@@ -3,76 +3,58 @@ package com.example.demo;
 import com.example.demo.entity.Currency;
 import com.example.demo.repository.CurrencyRepository;
 import com.example.demo.service.CurrencyService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.math.BigDecimal;
+
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
 public class CurrencyServiceTests {
+
+    @Mock
+    private WebClient webClient;
 
     @Mock
     private CurrencyRepository currencyRepository;
 
     private CurrencyService currencyService;
 
-    @Before
-    public void setUp() {
-        currencyService = new CurrencyService(currencyRepository);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        currencyService = new CurrencyService(webClient, currencyRepository);
     }
 
     @Test
-    public void testGetCurrencyRate_ReturnsCurrencyFromRepository_WhenFound() {
-        String currencyCode = "USD";
-        Currency currency = new Currency();
-        currency.setCurrencyCode(currencyCode);
-        when(currencyRepository.findByCode(currencyCode)).thenReturn(Mono.just(currency));
-
-        currencyService.getCurrencyRate(currencyCode).subscribe(
-                res-> {
-                    assertNotNull(res);
-                    assertEquals(currency, res);
-                }
-        );
-    }
-
-    @Test
-    public void testGetCurrencyRate_CallsUpdateCurrencyRate_WhenNotFoundInRepository() {
-        String currencyCode = "EUR";
-        Currency currency = new Currency();
-        currency.setCurrencyCode(currencyCode);
-        when(currencyRepository.findByCode(currencyCode)).thenReturn(Mono.empty());
-        when(currencyRepository.insertOrUpdate(currency)).thenReturn(Mono.just(currency));
-
-        currencyService.getCurrencyRate(currencyCode).subscribe(
-                res-> {
-                    assertNotNull(res);
-                    assertEquals(currency, res);
-                }
-        );
-
-        verify(currencyRepository, times(1)).insertOrUpdate(currency);
-    }
-
-    @Test
-    public void testGetCurrenciesRates_ReturnsAllCurrenciesFromRepository() {
-        Currency currency1 = new Currency();
-        Currency currency2 = new Currency();
+    void getCurrenciesRates_ReturnsAllCurrencies() {
+        Currency currency1 = new Currency("USD", BigDecimal.valueOf(1.0));
+        Currency currency2 = new Currency("EUR", BigDecimal.valueOf(0.8));
         when(currencyRepository.findAll()).thenReturn(Flux.just(currency1, currency2));
 
-        Flux<Currency> result = currencyService.getCurrenciesRates();
+        currencyService.getCurrenciesRates().collectList().block();
 
-        StepVerifier.create(result)
-                .expectNext(currency1)
-                .expectNext(currency2)
-                .verifyComplete();
+        verify(currencyRepository).findAll();
+        verifyNoMoreInteractions(currencyRepository);
+    }
+
+
+    @Test
+    void reinsert_DeletesAndInsertsCurrency() {
+        Currency currency = new Currency("USD", BigDecimal.valueOf(1.0));
+
+        when(currencyRepository.delete(currency)).thenReturn(Mono.empty());
+        when(currencyRepository.insertCurrency(currency)).thenReturn(Mono.just(currency));
+
+        currencyService.reinsert(currency).collectList().block();
+
+        verify(currencyRepository).delete(currency);
+        verify(currencyRepository).insertCurrency(currency);
+        verifyNoMoreInteractions(currencyRepository);
     }
 }

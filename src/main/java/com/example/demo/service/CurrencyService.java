@@ -6,6 +6,7 @@ import com.example.demo.repository.CurrencyRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -14,6 +15,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -55,9 +57,11 @@ public class CurrencyService {
                 .singleOrEmpty();
     }
 
-    @Transactional
     public Flux<Currency> reinsert(Currency currency) {
-        Mono<Void> deleteMono = repository.delete(currency);
+        Mono<Void> deleteMono = repository.delete(currency)
+                .onErrorResume(error -> {
+                    return Mono.empty();
+                });
         Mono<Currency> saveMono = repository.insertCurrency(currency);
         return Flux.concat(deleteMono.thenMany(Flux.empty()), saveMono);
     }

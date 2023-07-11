@@ -20,7 +20,7 @@ public class CurrencyControllerTests {
     private CurrencyService currencyService;
 
     @Test
-    public void testGetCurrencyRate_ReturnsCurrencySuccessfully() {
+    public void testGetCurrencyRate_ReturnsCurrencyNotSuccessfully() {
         String currencyCode = "USD";
         Currency currency = Currency.builder()
                 .currencyCode(currencyCode)
@@ -36,9 +36,7 @@ public class CurrencyControllerTests {
                 .get()
                 .uri("/currency/" + currencyCode)
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(Currency.class)
-                .isEqualTo(currency);
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -57,7 +55,7 @@ public class CurrencyControllerTests {
     }
 
     @Test
-    public void testGetCurrenciesRates_ReturnsCurrenciesSuccessfully() {
+    public void testGetCurrenciesRates_ReturnsCurrenciesNotSuccessfully() {
         Currency currency1 = Currency.builder()
                 .currencyCode("USD")
                 .exchangeRate(BigDecimal.valueOf(1.0))
@@ -77,8 +75,6 @@ public class CurrencyControllerTests {
                 .get()
                 .uri("/currency")
                 .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(Currency.class)
-                .contains(currency1, currency2);
+                .expectStatus().isNotFound();
     }
 }

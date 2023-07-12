@@ -48,7 +48,8 @@ public class CurrencyService {
 
             for (CurrencyRate rate : existingRates) {
                 List<ExchangeRate> existingRate = rate.getExchangeRates();
-                if (Objects.nonNull(existingRate)) {
+                if (Objects.nonNull(existingRate) &&
+                        !existingRate.contains(newRates.get(counter).getLastExchangeRate())) {
                     existingRate.add(newRates.get(counter).getLastExchangeRate());
                     rate.setExchangeRates(existingRate);
                 }

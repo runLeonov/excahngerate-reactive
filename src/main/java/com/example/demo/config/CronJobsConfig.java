@@ -22,7 +22,7 @@ public class CronJobsConfig {
         this.webClient = webClient;
         this.service = service;
     }
-    @Scheduled(fixedRate = 1000000L)
+    @Scheduled(fixedRate = 60000L)
     public void scheduleCurrencyRateUpdates() {
         log.info("Reaching API to get ExchangeRates...");
         for (CurrencyEnum el: CurrencyEnum.values()) {

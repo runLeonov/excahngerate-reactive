@@ -11,6 +11,6 @@ import reactor.core.publisher.Mono;
 public interface CurrencyRepository extends ReactiveMongoRepository<Currency, String> {
     Mono<Currency> findByBasicCode(String currencyCode);
     @Query(value = "{ '_id': ?0 }", fields =
-            "{ 'currenciesRates': { $elemMatch: { 'currencyExchangeCode': 'NIO' } } }")
+            "{ 'currenciesRates': { $elemMatch: { 'currencyExchangeCode': ?1 } } }")
     Mono<Currency> findCurrencyRateByIdAndCurrencyCode(String id, String currencyCode);
 }

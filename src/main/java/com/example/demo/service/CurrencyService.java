@@ -2,80 +2,69 @@ package com.example.demo.service;
 
 import com.example.demo.dto.ExchangeRateDTO;
 import com.example.demo.entity.Currency;
+import com.example.demo.entity.CurrencyRate;
+import com.example.demo.entity.ExchangeRate;
 import com.example.demo.repository.CurrencyRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+import java.util.List;
 import java.util.Objects;
 
 @Service
 @Slf4j
 public class CurrencyService {
-    private final WebClient webClient;
-    private final CurrencyRepository repository;
+    private final CurrencyRepository currencyRepository;
 
     @Autowired
-    public CurrencyService(WebClient webClient, CurrencyRepository currencyRateRepo) {
-        this.webClient = webClient;
-        this.repository = currencyRateRepo;
+    public CurrencyService(CurrencyRepository currencyRateRepo) {
+        this.currencyRepository = currencyRateRepo;
     }
 
     public Mono<Currency> getCurrencyRate(String currencyCode) {
-        return repository.findByCurrencyCode(currencyCode)
-                .switchIfEmpty(updateCurrencyRate(currencyCode));
+        return currencyRepository.findByBasicCode(currencyCode);
+    }
+
+    public Mono<Currency> getCurrencyRateForCurrency(String currencyCode, String currencyCodeFrom) {
+        return currencyRepository.findCurrencyRateByIdAndCurrencyCode(currencyCode, currencyCodeFrom);
     }
 
     public Flux<Currency> getCurrenciesRates() {
-        return repository.findAll();
+        return currencyRepository.findAll();
     }
 
-    public Mono<Currency> updateCurrencyRate(String currencyCode) {
-        log.info("Reaching API to get ExchangeRate for " + currencyCode);
-        return fetchExchangeRate(currencyCode)
-                .flatMap(exchangeRateDto -> convertToCurrencyRate(exchangeRateDto, currencyCode));
-    }
+    @Transactional
+    public Mono<Currency> reinsert(Currency currency) {
+        Mono<Currency> existingCurrencyCodeMono = currencyRepository.findById(currency.getBasicCode());
+        return existingCurrencyCodeMono.flatMap(existingCurrencyCode -> {
+            List<CurrencyRate> existingRates = existingCurrencyCode.getCurrenciesRates();
+            List<CurrencyRate> newRates = currency.getCurrenciesRates();
+            int counter = 0;
 
-    private Mono<ExchangeRateDTO> fetchExchangeRate(String currencyCode) {
-        return webClient.get()
-                .uri("/latest/USD")
-                .retrieve()
-                .bodyToMono(ExchangeRateDTO.class);
-    }
-
-    private Mono<Currency> convertToCurrencyRate(ExchangeRateDTO exchangeRateDto, String currencyCode) {
-        return convertToCurrencyRateFlux(Mono.just(exchangeRateDto))
-                .filter(x -> x.getCurrencyCode().equals(currencyCode))
-                .singleOrEmpty();
-    }
-
-    public Flux<Currency> reinsert(Currency currency) {
-        Mono<Void> deleteMono = repository.delete(currency)
-                .onErrorResume(error -> {
-                    return Mono.empty();
-                });
-        Mono<Currency> saveMono = repository.insertCurrency(currency);
-        return Flux.concat(deleteMono.thenMany(Flux.empty()), saveMono);
+            for (CurrencyRate rate : existingRates) {
+                List<ExchangeRate> existingRate = rate.getExchangeRates();
+                if (Objects.nonNull(existingRate)) {
+                    existingRate.add(newRates.get(counter).getLastExchangeRate());
+                    rate.setExchangeRates(existingRate);
+                }
+                counter++;
+            }
+            existingCurrencyCode.setCurrenciesRates(existingRates);
+            return currencyRepository.save(existingCurrencyCode);
+        }).switchIfEmpty(Mono.defer(() -> {
+            return currencyRepository.save(currency);
+        }));
     }
 
 
     public Flux<Currency> convertToCurrencyRateFlux(Mono<ExchangeRateDTO> exchangeRateDtoMono) {
         return exchangeRateDtoMono.flatMapMany(exchange -> {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
-            LocalDateTime dateTime = LocalDateTime.parse(exchange.getUpdateTimeStr(), formatter);
-            return Flux.fromIterable(exchange.getRates().entrySet())
-                    .map(entry ->
-                            ExchangeRateDTO.mapToCurrency(entry, dateTime)
-                    );
+            return Flux.just(ExchangeRateDTO.mapToCurrency(exchange));
         });
     }
-
 }

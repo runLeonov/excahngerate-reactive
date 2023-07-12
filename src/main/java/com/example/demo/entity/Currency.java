@@ -1,29 +1,23 @@
 package com.example.demo.entity;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Data
-@Table("currency_rate")
+@Document(collection = "currency_codes")
 @AllArgsConstructor
 @NoArgsConstructor
 public class Currency {
     @Id
-    private String currencyCode;
-    private BigDecimal exchangeRate;
-    private LocalDateTime updateTime;
-
-    public Currency(String currencyCode, BigDecimal exchangeRate) {
-        this.currencyCode = currencyCode;
-        this.exchangeRate = exchangeRate;
-    }
+    private String basicCode;
+    @Field("currenciesRates")
+    private List<CurrencyRate> currenciesRates;
 }

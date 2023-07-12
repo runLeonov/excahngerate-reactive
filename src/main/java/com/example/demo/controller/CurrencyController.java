@@ -1,15 +1,14 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Currency;
+import com.example.demo.entity.CurrencyRate;
 import com.example.demo.service.CurrencyService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -20,6 +19,13 @@ import java.util.ArrayList;
 @AllArgsConstructor
 public class CurrencyController {
     private final CurrencyService service;
+
+    @GetMapping("/{codeTo}/rate/{codeFrom}")
+    public Mono<ResponseEntity<Currency>> getCurrencyRateByCodes(@PathVariable String codeTo, @PathVariable String codeFrom) {
+        return service.getCurrencyRateForCurrency(codeTo, codeFrom)
+                .map(currency -> ResponseEntity.ok().body(currency))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 
     @GetMapping("/{code}")
     public Mono<ResponseEntity<Currency>> getCurrencyRate(@PathVariable String code) {

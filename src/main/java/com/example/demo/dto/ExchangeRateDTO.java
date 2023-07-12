@@ -1,13 +1,16 @@
 package com.example.demo.dto;
 
 import com.example.demo.entity.Currency;
+import com.example.demo.entity.CurrencyRate;
+import com.example.demo.entity.ExchangeRate;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -19,11 +22,30 @@ public class ExchangeRateDTO {
     @JsonProperty("time_last_update_utc")
     private String updateTimeStr;
 
-    public static Currency mapToCurrency(Map.Entry<String, Double> entry, LocalDateTime updateTime) {
-        return Currency.builder()
-                .currencyCode(entry.getKey())
-                .exchangeRate(BigDecimal.valueOf(entry.getValue()))
-                .updateTime(updateTime)
+
+    public static Currency mapToCurrency(ExchangeRateDTO exchangeRateDTO) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+        LocalDateTime dateTime = LocalDateTime.parse(exchangeRateDTO.getUpdateTimeStr(), formatter);
+
+        Currency currency = Currency.builder()
+                .basicCode(exchangeRateDTO.getBaseCurrency())
                 .build();
+
+        List<CurrencyRate> currencyRates = exchangeRateDTO.getRates().entrySet().stream()
+                .map(entry -> {
+                    ExchangeRate exchangeRate = ExchangeRate.builder()
+                            .exchangeRate(entry.getValue())
+                            .updateTime(dateTime)
+                            .build();
+                    return CurrencyRate.builder()
+                            .currencyExchangeCode(entry.getKey())
+                            .lastExchangeRate(exchangeRate)
+                            .exchangeRates(Collections.singletonList(exchangeRate))
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        currency.setCurrenciesRates(currencyRates);
+        return currency;
     }
 }

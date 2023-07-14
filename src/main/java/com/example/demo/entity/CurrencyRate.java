@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +20,6 @@ public class CurrencyRate {
     @JsonProperty("exchangeRates")
     private List<ExchangeRate> exchangeRates;
     @Transient
-//    @JsonProperty("lastExchangeRate")
-//    @JsonIgnore
+    @JsonIgnore
     private ExchangeRate lastExchangeRate;
 }

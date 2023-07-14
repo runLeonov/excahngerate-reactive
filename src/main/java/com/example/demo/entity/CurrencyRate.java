@@ -19,7 +19,7 @@ public class CurrencyRate {
     @JsonProperty("exchangeRates")
     private List<ExchangeRate> exchangeRates;
     @Transient
-    @JsonProperty("lastExchangeRate")
+//    @JsonProperty("lastExchangeRate")
 //    @JsonIgnore
-    private transient ExchangeRate lastExchangeRate;
+    private ExchangeRate lastExchangeRate;
 }
